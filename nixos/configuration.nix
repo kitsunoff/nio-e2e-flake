@@ -45,6 +45,12 @@ in
   # is unsupported on the legacy iptables backend — a hard assertion upstream).
   networking.nftables.enable = true;
 
+  # Open the Incus HTTPS API port so cluster members can reach each other
+  # (join + inter-member traffic). Without this the firewall drops incoming
+  # 8443 and joiners time out connecting to the bootstrap ("dial tcp
+  # <bootstrap>:8443: i/o timeout").
+  networking.firewall.allowedTCPPorts = [ 8443 ];
+
   # SSH for install/apply + post-install verification. root is authorized via
   # a FILE so NIO overrides the key per-run: NixosConfiguration's
   # `additionalFiles` mechanism force-stages a replacement `authorized_keys`
