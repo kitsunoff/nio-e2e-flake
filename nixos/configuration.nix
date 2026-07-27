@@ -6,7 +6,15 @@
 # cluster member, so a single hardcoded address would collide across members.
 # DHCP keeps every member's network config self-consistent regardless of how
 # many real VMs the cluster ends up with.
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, nixcluster ? null, ... }:
+let
+  # NIO injects each member's cluster IP as `install.ip`; nixcluster surfaces it
+  # to the member's NixOS eval via `_module.args.nixcluster.member`.
+  memberIp =
+    if nixcluster != null && nixcluster ? member
+    then (nixcluster.member.install.ip or null)
+    else null;
+in
 {
   # aarch64 target platform.
   nixpkgs.hostPlatform = "aarch64-linux";
@@ -17,7 +25,21 @@
   boot.loader.efi.canTouchEfiVariables = true;
   boot.loader.timeout = 1;
 
-  networking.useDHCP = lib.mkDefault true;
+  # Two-NIC layout of the Lima aarch64 test VMs (predictable names OFF so the
+  # kernel probe order gives stable eth0/eth1):
+  #   eth0 = Lima usermode NAT (gvisor) — carries internet egress + default
+  #          route + DNS; keep it on DHCP.
+  #   eth1 = socket_vmnet `shared` net (192.168.105.0/24) — pin it to the
+  #          member's cluster IP (install.ip) so the node stays reachable at
+  #          Machine.spec.host across the nixos-anywhere kexec (DHCP would
+  #          reassign and break host == Machine.spec.host).
+  networking.usePredictableInterfaceNames = false;
+  networking.useDHCP = false;
+  networking.interfaces.eth0.useDHCP = true;
+  networking.interfaces.eth1.ipv4.addresses =
+    lib.optionals (memberIp != null) [
+      { address = memberIp; prefixLength = 24; }
+    ];
 
   # Incus on NixOS requires nftables (its virtual-network/firewall integration
   # is unsupported on the legacy iptables backend — a hard assertion upstream).
@@ -46,11 +68,11 @@
   incus.enable = true;
   incus.storageBackend = "dir"; # test-friendly: no spare block device required.
 
-  # TODO(incus-clustering): set incus.cluster.enable/bootstrapMember once the
-  # nixcluster incus module supports clustering. Today each member only gets a
-  # standalone `incus admin init --preseed` (single-node daemon); there is no
-  # multi-node `incus cluster enable`/join wiring in nixcluster yet — that is
-  # a separate follow-up task.
+  # Multi-node Incus clustering is enabled at the cluster level in
+  # modules/clusters/incus-lab.nix (`incus.cluster.enable = true`), which makes
+  # the first member the bootstrap node and joins the rest via converge's
+  # incus.cluster-join step. This base only turns the daemon on; the
+  # bootstrap-vs-joiner preseed split is decided by nixcluster's incus module.
 
   # --- sops-nix --------------------------------------------------------------
   # `sops.age.keyFile` (-> /etc/age/key.txt) is set by nixcluster's

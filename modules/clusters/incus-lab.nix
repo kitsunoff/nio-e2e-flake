@@ -27,6 +27,13 @@
       # of their own beyond install.ip.
       incus.enable = true;
 
+      # Multi-node clustering: the members form ONE Incus cluster. bootstrapMember
+      # is left to its default (the first member sorted by name), which for NIO's
+      # injected members is `nio-c1`. converge's incus.cluster-join step mints a
+      # join token on the bootstrap and joins the rest. Keyed at cluster level so
+      # NIO's data-only members (install.ip only) all participate.
+      incus.cluster.enable = true;
+
       # Every member (including NIO-injected data-only ones) inherits this
       # base: disko (fresh-disk install via nixos-anywhere) + sshd/root key +
       # sops-nix + Incus daemon. See nixos/configuration.nix for the
