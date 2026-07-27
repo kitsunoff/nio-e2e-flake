@@ -9,16 +9,14 @@
     { clusterModules, inputs, ... }:
     {
       imports = [
-        clusterModules.sops
         clusterModules.incus
       ];
 
-      # sops-nix wiring: age key delivered out-of-band via
-      # `nixclusterctl incus-lab install <member> --age-key-file ...`
-      # (--extra-files stages it at /etc/age/key.txt on the target, outside
-      # the nix store — see cluster-modules/sops.nix upstream). This sets
-      # `sops.defaultSopsFile`/`sops.age.keyFile` on every member.
-      sops.enable = true;
+      # NOTE: sops is intentionally NOT enabled for this fixture. The Incus
+      # cluster victory path needs no cluster secrets, and the sops.gen converge
+      # preStep (which decrypts committed secrets to merge keys) is out of scope
+      # here. ageKeyRef on the CR is harmless/unused. Re-add clusterModules.sops
+      # + sops.enable if a scenario needs real secrets.
 
       # Cluster-level Incus extension: adds the Incus NixOS module (option
       # declarations + preseed/reconcile machinery) to every member. Actually
@@ -36,13 +34,11 @@
 
       # Every member (including NIO-injected data-only ones) inherits this
       # base: disko (fresh-disk install via nixos-anywhere) + sshd/root key +
-      # sops-nix + Incus daemon. See nixos/configuration.nix for the
-      # incus-clustering TODO.
+      # Incus daemon (clustering enabled above).
       defaultNixosConfiguration = inputs.nixpkgs.lib.nixosSystem {
         system = "aarch64-linux";
         modules = [
           inputs.disko.nixosModules.disko
-          inputs.sops-nix.nixosModules.sops
           ../../nixos/disk-config.nix
           ../../nixos/configuration.nix
         ];

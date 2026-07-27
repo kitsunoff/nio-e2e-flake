@@ -74,22 +74,8 @@ in
   # incus.cluster-join step. This base only turns the daemon on; the
   # bootstrap-vs-joiner preseed split is decided by nixcluster's incus module.
 
-  # --- sops-nix --------------------------------------------------------------
-  # `sops.age.keyFile` (-> /etc/age/key.txt) is set by nixcluster's
-  # `clusterModules.sops` (cluster-modules/sops.nix), added to every member
-  # once `nixcluster.incus-lab.sops.enable = true`. That same module also sets
-  # `sops.defaultSopsFile` — but to the plain string "secrets/incus-lab.yaml"
-  # (its `secretsDir` option is documented as "relative to project root", i.e.
-  # meant for the CLI's shell scripts, which run with cwd = repo root). Passed
-  # straight through to sops-nix's NixOS option, a relative string fails
-  # sops-nix's `absolute path` type check at eval time. `mkForce` here with a
-  # real Nix path (resolved against this file's location, so it lands as an
-  # absolute /nix/store/... path once the flake is copied into the store)
-  # overrides that string with the committed encrypted file. Declares one
-  # trivial secret purely to prove the sops-nix wiring evaluates/decrypts end
-  # to end; nothing else in this fixture consumes it.
-  sops.defaultSopsFile = lib.mkForce ../secrets/incus-lab.yaml;
-  sops.secrets."example/greeting" = { };
+  # sops-nix is intentionally not wired here (see modules/clusters/incus-lab.nix):
+  # the Incus cluster victory path needs no cluster secrets.
 
   # nixpkgs is pinned to nixos-unstable via `nixcluster/nixpkgs`, which
   # currently tracks the 26.11 cycle.

@@ -5,7 +5,7 @@
     # Pinned to nixcluster@master (20de2a6...) per the integration plan. Bump
     # deliberately, not via floating `master`, so this fixture's behavior is
     # reproducible independent of upstream nixcluster churn.
-    nixcluster.url = "github:kitsunoff/nixcluster/7751b6a86617dddffa472cb49bb231d797bc16db";
+    nixcluster.url = "github:kitsunoff/nixcluster/2c032c8713aa5ebeafe8dcb9d31b5d254a437b9f";
 
     # Reuse nixcluster's locked inputs for a single consistent set (same
     # pattern as nixcluster's own downstream template).
