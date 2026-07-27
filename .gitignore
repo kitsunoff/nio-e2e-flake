@@ -1,0 +1,7 @@
+# Private keys — NEVER commit (matches nixcluster's own secrets/ convention).
+secrets/*.age.key
+secrets/*_ssh
+secrets/*.nebula-ca.key
+
+# nixos-anywhere/apply runtime state (pinned host keys, etc.)
+.nixcluster/
