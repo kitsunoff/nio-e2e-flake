@@ -1,21 +1,32 @@
 {
-  description = "NIO e2e test flake — a uniquely-hashed, non-cached derivation to exercise delegated remote builds";
+  description = "NIO e2e fixture: a nixcluster downstream flake defining ONE incus cluster (no members — NIO injects them at converge time)";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  inputs = {
+    # Pinned to nixcluster@master (20de2a6...) per the integration plan. Bump
+    # deliberately, not via floating `master`, so this fixture's behavior is
+    # reproducible independent of upstream nixcluster churn.
+    nixcluster.url = "github:kitsunoff/nixcluster/20de2a603153d3d0b8b0c024665da844f87b0e5f";
 
-  outputs = { self, nixpkgs }:
-    let
-      systems = [ "x86_64-linux" "aarch64-linux" ];
-      forAll = f: nixpkgs.lib.genAttrs systems (s: f nixpkgs.legacyPackages.${s});
-    in
-    {
-      # A trivial package whose source text embeds a unique marker, so its store
-      # path is not present in any public cache and building it forces a real
-      # build (on the NixBuilder, when one is referenced).
-      packages = forAll (pkgs: {
-        default = pkgs.writeShellScriptBin "nio-e2e-app" ''
-          echo "NIO delegated remote-build e2e marker: uniq-20260707-a1"
-        '';
-      });
+    # Reuse nixcluster's locked inputs for a single consistent set (same
+    # pattern as nixcluster's own downstream template).
+    nixpkgs.follows = "nixcluster/nixpkgs";
+    flake-parts.follows = "nixcluster/flake-parts";
+    import-tree.follows = "nixcluster/import-tree";
+    disko.follows = "nixcluster/disko";
+    sops-nix.follows = "nixcluster/sops-nix";
+  };
+
+  outputs =
+    inputs@{ flake-parts, import-tree, nixcluster, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      # Members are real (or throwaway-VM) aarch64 machines only.
+      systems = [ "aarch64-linux" ];
+
+      imports = [
+        # Declarative `nixcluster.<cluster>` option -> clusterConfigurations.
+        nixcluster.flakeModules.default
+        # Auto-import everything under ./modules (clusters/clusterModules/nodes).
+        (import-tree ./modules)
+      ];
     };
 }
