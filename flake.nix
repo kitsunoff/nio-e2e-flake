@@ -2,10 +2,10 @@
   description = "NIO e2e fixture: a nixcluster downstream flake defining ONE incus cluster (no members — NIO injects them at converge time)";
 
   inputs = {
-    # Pinned to nixcluster@master (20de2a6...) per the integration plan. Bump
-    # deliberately, not via floating `master`, so this fixture's behavior is
-    # reproducible independent of upstream nixcluster churn.
-    nixcluster.url = "github:kitsunoff/nixcluster/421e316c9a7a25f964ce886044743af56fcddc86";
+    # Pinned to nixcluster@master (9b9ee61...). Bump deliberately, not via a
+    # floating `master`, so this fixture's behavior is reproducible independent
+    # of upstream nixcluster churn.
+    nixcluster.url = "github:kitsunoff/nixcluster/9b9ee61af438037ddff0b05e806282251c67b255";
 
     # Reuse nixcluster's locked inputs for a single consistent set (same
     # pattern as nixcluster's own downstream template).
