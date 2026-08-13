@@ -29,7 +29,9 @@ in
   # kernel probe order gives stable eth0/eth1):
   #   eth0 = Lima usermode NAT (gvisor) — carries internet egress + default
   #          route + DNS; keep it on DHCP.
-  #   eth1 = socket_vmnet `shared` net (192.168.105.0/24) — pin it to the
+  #   eth1 = socket_vmnet `shared` net — a host-local /24 (shown here as the
+  #          documentation range 198.51.100.0/24; the actual subnet is whatever
+  #          the host's socket_vmnet is configured for) — pin it to the
   #          member's cluster IP (install.ip) so the node stays reachable at
   #          Machine.spec.host across the nixos-anywhere kexec (DHCP would
   #          reassign and break host == Machine.spec.host).

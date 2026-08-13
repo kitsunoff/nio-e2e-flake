@@ -26,10 +26,12 @@
       incus.enable = true;
 
       # Multi-node clustering: the members form ONE Incus cluster. bootstrapMember
-      # is left to its default (the first member sorted by name), which for NIO's
-      # injected members is `nio-c1`. converge's incus.cluster-join step mints a
-      # join token on the bootstrap and joins the rest. Keyed at cluster level so
-      # NIO's data-only members (install.ip only) all participate.
+      # is left to its default: the first member sorted by name. For a member set
+      # of `alpha`, `beta`, `gamma` that elects `alpha` as the bootstrap node — the
+      # sorted name decides it, so NIO's injected members elect whichever of them
+      # sorts first. converge's incus.cluster-join step mints a join token on the
+      # bootstrap and joins the rest. Keyed at cluster level so NIO's data-only
+      # members (install.ip only) all participate.
       incus.cluster.enable = true;
 
       # Every member (including NIO-injected data-only ones) inherits this
